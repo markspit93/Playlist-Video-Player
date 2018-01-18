@@ -10,7 +10,7 @@ fun ImageView.loadImage(url: String?) {
     GlideApp.with(context)
             .load(url)
             .diskCacheStrategy(DiskCacheStrategy.NONE)
-            .placeholder(R.drawable.ic_github_circle)
+            .placeholder(R.drawable.ic_movies_grey_24dp)
             .transition(withCrossFade())
             .into(this)
 }

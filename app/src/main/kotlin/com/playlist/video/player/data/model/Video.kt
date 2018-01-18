@@ -10,5 +10,7 @@ data class Video(
         @SerializedName("thumbnail_url")
         val thumbnailUrl: String,
 
+        val title: String,
+
         val duration: Long
 )
