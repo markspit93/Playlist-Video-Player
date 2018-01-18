@@ -22,9 +22,19 @@ open class MvpPresenter<VIEW : MvpView, VIEWMODEL : ViewModel> {
 
     fun attachView(view: VIEW) {
         this.view = view
+        onViewActive()
     }
 
     fun detachView() {
         view = null
+        onViewInactive()
+    }
+
+    open fun onViewActive() {
+        // override if necessary
+    }
+
+    open fun onViewInactive() {
+        // override if necessary
     }
 }

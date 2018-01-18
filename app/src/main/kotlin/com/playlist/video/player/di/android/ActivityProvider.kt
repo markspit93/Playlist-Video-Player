@@ -1,7 +1,7 @@
 package com.playlist.video.player.di.android
 
 import com.playlist.video.player.di.scopes.PerActivity
-import com.playlist.video.player.ui.details.VideoPlayerActivity
+import com.playlist.video.player.ui.videoplayer.VideoPlayerActivity
 import com.playlist.video.player.ui.main.MainActivity
 import dagger.Module
 import dagger.android.ContributesAndroidInjector

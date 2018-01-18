@@ -1,4 +1,4 @@
-package com.playlist.video.player.ui.details
+package com.playlist.video.player.ui.videoplayer
 
 import com.playlist.video.player.ui.common.BaseActivity
 

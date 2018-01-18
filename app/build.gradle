@@ -23,11 +23,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
             buildConfigField "boolean", "DEBUG_MODE", "false"
-            buildConfigField "String", "PLAYLIST_ENDPOINT", "\"https://api.github.com/\""
+            buildConfigField "String", "PLAYLIST_ENDPOINT", "\"https://raw.githubusercontent.com/markspit93/Playlist-Video-Player/master/\""
         }
         debug {
             buildConfigField "boolean", "DEBUG_MODE", "true"
-            buildConfigField "String", "PLAYLIST_ENDPOINT", "\"https://api.github.com/\""
+            buildConfigField "String", "PLAYLIST_ENDPOINT", "\"https://raw.githubusercontent.com/markspit93/Playlist-Video-Player/master/\""
         }
     }
 
@@ -51,6 +51,8 @@ ext {
     constraintLayoutVersion = '1.1.0-beta4'
     archComponentsVersion = '1.0.0'
     retrofit2Version = '2.3.0'
+    rxKotlinVersion = '2.2.0'
+    rxAndroidVersion = '2.0.1'
     daggerVersion = '2.14.1'
     glideVersion = '4.5.0'
 
@@ -86,6 +88,10 @@ dependencies {
 
     implementation "com.squareup.retrofit2:retrofit:$retrofit2Version"
     implementation "com.squareup.retrofit2:converter-gson:$retrofit2Version"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit2Version"
+
+    implementation "io.reactivex.rxjava2:rxkotlin:$rxKotlinVersion"
+    implementation "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
 
     implementation "com.google.dagger:dagger:$daggerVersion"
     implementation "com.google.dagger:dagger-android-support:$daggerVersion"
