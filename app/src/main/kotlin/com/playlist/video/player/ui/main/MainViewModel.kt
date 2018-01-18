@@ -1,23 +1,12 @@
 package com.playlist.video.player.ui.main
 
 import android.arch.lifecycle.ViewModel
+import com.playlist.video.player.data.model.Video
 import com.playlist.video.player.data.repository.PlaylistRepository
+import com.playlist.video.player.ext.lazyAndroid
 import javax.inject.Inject
 
-class MainViewModel @Inject constructor(private val filterRepository: PlaylistRepository) : ViewModel() {
+class MainViewModel @Inject constructor(private val playlistRepository: PlaylistRepository) : ViewModel() {
 
-//    val filterList: MutableList<Video> by lazyAndroid { filterRepository.getFilters().toMutableList() }
-//
-//    fun saveFilter(tag: String, checked: Boolean) {
-//        var filter: Video? = filterList.find { it.tag == tag }
-//
-//        if (filter == null) {
-//            filter = Video(tag = tag, checked = checked)
-//            filterList.add(filter)
-//            filterRepository.saveFilter(filter)
-//        } else {
-//            filter.checked = checked
-//            filterRepository.saveFilter(filter)
-//        }
-//    }
+    val filterList: List<Video>? by lazyAndroid { playlistRepository.getPlaylist().body() }
 }

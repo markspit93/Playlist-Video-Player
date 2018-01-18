@@ -1,8 +1,14 @@
 package com.playlist.video.player.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class Video(
 
-        val tag: String,
+        @SerializedName("video_url")
+        val videoUrl: String,
 
-        var checked: Boolean
+        @SerializedName("thumbnail_url")
+        val thumbnailUrl: String,
+
+        val duration: Long
 )
