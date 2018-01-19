@@ -17,6 +17,7 @@ import com.playlist.video.player.R
 import com.playlist.video.player.data.model.Video
 import com.playlist.video.player.ui.common.BaseActivity
 import kotlinx.android.synthetic.main.activity_video_player.*
+import org.jetbrains.anko.sdk19.listeners.onClick
 
 class VideoPlayerActivity : BaseActivity() {
 
@@ -34,15 +35,35 @@ class VideoPlayerActivity : BaseActivity() {
 
     private lateinit var player: SimpleExoPlayer
     private val playlist: MutableList<Video> = mutableListOf()
+    private var currentPosition = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
 
         playlist.addAll(intent.extras.getParcelableArrayList(EXTRA_PLAYLIST))
+        currentPosition = savedInstanceState?.getInt(EXTRA_POSITION) ?: intent.extras.getInt(EXTRA_POSITION)
 
         setupExoPlayer()
-        startVideoStream(intent.extras.getInt(EXTRA_POSITION))
+        startVideoStream(currentPosition)
+
+        btnPlay.onClick {
+            player.playWhenReady = !btnPlay.isSelected
+            btnPlay.isSelected = !btnPlay.isSelected
+        }
+
+        btnPrevious.onClick {
+            startVideoStream(--currentPosition)
+        }
+
+        btnNext.onClick {
+            startVideoStream(++currentPosition)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(EXTRA_POSITION, currentPosition)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
@@ -59,12 +80,32 @@ class VideoPlayerActivity : BaseActivity() {
     }
 
     private fun startVideoStream(position: Int) {
-        val videoUri = Uri.parse(playlist[position].videoUrl)
+        val video = playlist[position]
+
+        val uri = Uri.parse(video.videoUrl)
         val dataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "videoPlayer"), null)
-        val videoSource = HlsMediaSource(videoUri, dataSourceFactory, 1, null, null)
+        val videoSource = HlsMediaSource(uri, dataSourceFactory, 1, null, null)
 
         player.prepare(videoSource)
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.playWhenReady = true
+
+        btnPlay.isSelected = true
+        txtTitle.text = video.title
+
+        // TODO TIME + FORMATTING
+
+        when (currentPosition) {
+            0 -> {
+                btnPrevious.isEnabled = false
+            }
+            playlist.lastIndex -> {
+                btnNext.isEnabled = false
+            }
+            else -> {
+                btnPrevious.isEnabled = true
+                btnNext.isEnabled = true
+            }
+        }
     }
 }
