@@ -6,9 +6,8 @@ import android.view.ViewGroup
 import com.playlist.video.player.R
 import com.playlist.video.player.data.model.Video
 
-class MainAdapter(private val videoClick: (Int) -> Unit) : RecyclerView.Adapter<MainViewHolder>() {
-
-    private val items: MutableList<Video> = mutableListOf()
+class MainAdapter(private val items: List<Video>,
+                  private val videoClick: (Int) -> Unit) : RecyclerView.Adapter<MainViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainViewHolder {
         return MainViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_video, parent, false), videoClick)
@@ -19,9 +18,4 @@ class MainAdapter(private val videoClick: (Int) -> Unit) : RecyclerView.Adapter<
     }
 
     override fun getItemCount() = items.size
-
-    fun addItems(videos: List<Video>) {
-        items.addAll(videos)
-        notifyDataSetChanged()
-    }
 }

@@ -7,14 +7,14 @@ import com.playlist.video.player.R
 import com.playlist.video.player.data.model.Video
 import com.playlist.video.player.di.viewmodel.ViewModelFactory
 import com.playlist.video.player.ext.get
-import com.playlist.video.player.ext.lazyAndroid
 import com.playlist.video.player.ui.common.mvp.MvpActivity
+import com.playlist.video.player.ui.videoplayer.VideoPlayerActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.toast
 
 class MainActivity : MvpActivity<MainContract.View, MainPresenter, MainViewModel>(), MainContract.View {
 
-    private val mainAdapter by lazyAndroid { MainAdapter(onVideoClicked) }
+    private lateinit var playlist: List<Video>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,7 +23,6 @@ class MainActivity : MvpActivity<MainContract.View, MainPresenter, MainViewModel
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.setHasFixedSize(true)
-        recyclerView.adapter = mainAdapter
     }
 
     override fun getViewModel(viewModelFactory: ViewModelFactory): MainViewModel {
@@ -31,7 +30,9 @@ class MainActivity : MvpActivity<MainContract.View, MainPresenter, MainViewModel
     }
 
     override fun showVideoList(videoList: List<Video>) {
-        mainAdapter.addItems(videoList)
+        // TODO: Add progress
+        playlist = videoList
+        recyclerView.adapter = MainAdapter(videoList, onVideoClicked)
     }
 
     override fun showGenericError() {
@@ -39,6 +40,6 @@ class MainActivity : MvpActivity<MainContract.View, MainPresenter, MainViewModel
     }
 
     private val onVideoClicked: (Int) -> Unit = { position ->
-        // TODO
+        startActivity(VideoPlayerActivity.createIntent(this, playlist, position))
     }
 }

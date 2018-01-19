@@ -16,6 +16,8 @@ class MainViewHolder(itemView: View,
         itemView.txtDuration.text = video.duration.toString()
 
         // TODO: TIME FORMATTING
+
+        itemView.setOnClickListener(this)
     }
 
     override fun onClick(view: View) {
