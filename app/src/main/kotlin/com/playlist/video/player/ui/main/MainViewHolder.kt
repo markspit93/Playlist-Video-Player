@@ -4,6 +4,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.playlist.video.player.data.model.Video
 import com.playlist.video.player.ext.loadImage
+import com.playlist.video.player.util.formatTime
 import kotlinx.android.synthetic.main.item_video.view.*
 
 class MainViewHolder(itemView: View,
@@ -13,9 +14,7 @@ class MainViewHolder(itemView: View,
         itemView.imgThumbnail.loadImage(video.thumbnailUrl)
 
         itemView.txtTitle.text = video.title
-        itemView.txtDuration.text = video.duration.toString()
-
-        // TODO: TIME FORMATTING
+        itemView.txtDuration.text = formatTime(video.duration)
 
         itemView.setOnClickListener(this)
     }

@@ -20,6 +20,7 @@ import com.playlist.video.player.data.model.Video
 import com.playlist.video.player.ext.gone
 import com.playlist.video.player.ext.visible
 import com.playlist.video.player.ui.common.BaseActivity
+import com.playlist.video.player.util.formatTime
 import kotlinx.android.synthetic.main.activity_video_player.*
 import org.jetbrains.anko.sdk19.listeners.onClick
 import org.jetbrains.anko.toast
@@ -28,22 +29,22 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
 
     companion object {
         private const val EXTRA_PLAYLIST = "extra_playlist"
-        private const val EXTRA_VIDEO = "extra_video"
+        private const val EXTRA_PLAYLIST_POSITION = "extra_playlist_position"
 
-        private const val KEY_VIDEO = "key_video"
-        private const val KEY_POSITION = "key_position"
+        private const val KEY_PLAYLIST_POSITION = "key_playlist_position"
+        private const val KEY_VIDEO_POSITION = "key_video_position"
 
         fun createIntent(ctx: Context, playlist: List<Video>, position: Int): Intent {
             val intent = Intent(ctx, VideoPlayerActivity::class.java)
             intent.putParcelableArrayListExtra(EXTRA_PLAYLIST, ArrayList(playlist))
-            intent.putExtra(EXTRA_VIDEO, position)
+            intent.putExtra(EXTRA_PLAYLIST_POSITION, position)
             return intent
         }
     }
 
     private lateinit var player: SimpleExoPlayer
     private val playlist: MutableList<Video> = mutableListOf()
-    private var currentVideo = 0
+    private var playlistPosition = 0
     private var userSeeking = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,12 +52,12 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
         setContentView(R.layout.activity_video_player)
 
         playlist.addAll(intent.extras.getParcelableArrayList(EXTRA_PLAYLIST))
-        currentVideo = savedInstanceState?.getInt(KEY_VIDEO) ?: intent.extras.getInt(EXTRA_VIDEO)
+        playlistPosition = savedInstanceState?.getInt(KEY_PLAYLIST_POSITION) ?: intent.extras.getInt(EXTRA_PLAYLIST_POSITION)
 
         setupExoPlayer()
-        startVideoStream(currentVideo)
+        startVideoStream(playlistPosition)
 
-        savedInstanceState?.let { player.seekTo(it.getLong(KEY_POSITION)) }
+        savedInstanceState?.let { player.seekTo(it.getLong(KEY_VIDEO_POSITION)) }
 
         btnPlay.onClick {
             player.playWhenReady = !btnPlay.isSelected
@@ -64,32 +65,41 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
         }
 
         btnPrevious.onClick {
-            startVideoStream(--currentVideo)
+            startVideoStream(--playlistPosition)
         }
 
         btnNext.onClick {
-            startVideoStream(++currentVideo)
+            startVideoStream(++playlistPosition)
         }
 
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+            private var userSeek: Long = 0
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val currentSeek = (progress.toDouble() / 100 * playlist[playlistPosition].duration.toDouble()).toLong()
+
                 if (fromUser) {
-                    player.seekTo((progress.toDouble() / 100 * player.duration.toDouble()).toLong())
+                    userSeek = currentSeek
+                } else if (progress == 100 && playlistPosition != playlist.lastIndex) {
+                    startVideoStream(++playlistPosition)
                 }
 
-                if (progress == 100) {
-                    if (currentVideo != playlist.lastIndex) {
-                        startVideoStream(++currentVideo)
-                    }
-                }
+                txtCurrentTime.text = formatTime(currentSeek)
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
                 userSeeking = true
             }
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
                 userSeeking = false
+                player.seekTo(userSeek)
+
+                if (seekBar.progress == 100 && playlistPosition != playlist.lastIndex) {
+                    startVideoStream(++playlistPosition)
+                }
+
+                userSeek = 0
             }
         })
 
@@ -97,8 +107,8 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(KEY_VIDEO, currentVideo)
-        outState.putLong(KEY_POSITION, player.currentPosition)
+        outState.putInt(KEY_PLAYLIST_POSITION, playlistPosition)
+        outState.putLong(KEY_VIDEO_POSITION, player.currentPosition)
         super.onSaveInstanceState(outState)
     }
 
@@ -131,9 +141,10 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
         txtTitle.text = video.title
         seekBar.progress = 0
 
-        // TODO TIME + FORMATTING
+        txtCurrentTime.text = formatTime(0)
+        txtTotalDuration.text = formatTime(video.duration)
 
-        when (currentVideo) {
+        when (playlistPosition) {
             0 -> {
                 btnPrevious.isEnabled = false
             }
@@ -149,11 +160,11 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
 
     override fun run() {
         if (!userSeeking) {
-            seekBar.progress = ((player.currentPosition.toDouble() / player.duration.toDouble() * 100)).toInt()
+            seekBar.progress = ((player.currentPosition.toDouble() / playlist[playlistPosition].duration.toDouble() * 100)).toInt()
         }
 
         if (!isFinishing) {
-            Handler().postDelayed(this, 300)
+            Handler().postDelayed(this, 1000)
         }
     }
 

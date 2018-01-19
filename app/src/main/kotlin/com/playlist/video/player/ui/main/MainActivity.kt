@@ -7,6 +7,7 @@ import com.playlist.video.player.R
 import com.playlist.video.player.data.model.Video
 import com.playlist.video.player.di.viewmodel.ViewModelFactory
 import com.playlist.video.player.ext.get
+import com.playlist.video.player.ext.gone
 import com.playlist.video.player.ui.common.mvp.MvpActivity
 import com.playlist.video.player.ui.videoplayer.VideoPlayerActivity
 import kotlinx.android.synthetic.main.activity_main.*
@@ -30,7 +31,7 @@ class MainActivity : MvpActivity<MainContract.View, MainPresenter, MainViewModel
     }
 
     override fun showVideoList(videoList: List<Video>) {
-        // TODO: Add progress
+        progressBar.gone()
         playlist = videoList
         recyclerView.adapter = MainAdapter(videoList, onVideoClicked)
     }
