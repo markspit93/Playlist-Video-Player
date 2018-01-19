@@ -2,6 +2,7 @@
 
     <string name="app_name">Playlist Video Player</string>
 
-    <string name="error_loading">Failed to load playlist</string>
+    <string name="error_loading_playlist">Failed to load playlist</string>
+    <string name="error_loading_video">Failed to load video</string>
 
 </resources>

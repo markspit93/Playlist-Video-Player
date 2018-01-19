@@ -36,7 +36,7 @@ class MainActivity : MvpActivity<MainContract.View, MainPresenter, MainViewModel
     }
 
     override fun showGenericError() {
-        toast(R.string.error_loading)
+        toast(R.string.error_loading_playlist)
     }
 
     private val onVideoClicked: (Int) -> Unit = { position ->
