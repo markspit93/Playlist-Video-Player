@@ -7,8 +7,7 @@ import com.playlist.video.player.ext.loadImage
 import com.playlist.video.player.util.formatTime
 import kotlinx.android.synthetic.main.item_video.view.*
 
-class MainViewHolder(itemView: View,
-                     private val func: (position: Int) -> Unit) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+class MainViewHolder(itemView: View, private val func: (position: Int) -> Unit) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
 
     fun bindItem(video: Video) {
         itemView.imgThumbnail.loadImage(video.thumbnailUrl)

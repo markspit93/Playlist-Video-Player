@@ -5,13 +5,15 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.view.MenuItem
 import android.widget.SeekBar
-import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.source.TrackGroupArray
+import com.google.android.exoplayer2.ExoPlaybackException
+import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
@@ -25,7 +27,7 @@ import kotlinx.android.synthetic.main.activity_video_player.*
 import org.jetbrains.anko.sdk19.listeners.onClick
 import org.jetbrains.anko.toast
 
-class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
+class VideoPlayerActivity : BaseActivity(), Runnable {
 
     companion object {
         private const val EXTRA_PLAYLIST = "extra_playlist"
@@ -50,6 +52,9 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
+        setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setDisplayShowTitleEnabled(false)
 
         playlist.addAll(intent.extras.getParcelableArrayList(EXTRA_PLAYLIST))
         playlistPosition = savedInstanceState?.getInt(KEY_PLAYLIST_POSITION) ?: intent.extras.getInt(EXTRA_PLAYLIST_POSITION)
@@ -64,19 +69,15 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
             btnPlay.isSelected = !btnPlay.isSelected
         }
 
-        btnPrevious.onClick {
-            startVideoStream(--playlistPosition)
-        }
+        btnPrevious.onClick { startVideoStream(--playlistPosition) }
+        btnNext.onClick { startVideoStream(++playlistPosition) }
 
-        btnNext.onClick {
-            startVideoStream(++playlistPosition)
-        }
-
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             private var userSeek: Long = 0
 
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val currentSeek = (progress.toDouble() / 100 * playlist[playlistPosition].duration.toDouble()).toLong()
+                val currentSeek =
+                    (progress.toDouble() / 100 * playlist[playlistPosition].duration.toDouble()).toLong()
 
                 if (fromUser) {
                     userSeek = currentSeek
@@ -106,6 +107,13 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
         Handler().post(this)
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            finishAfterTransition()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putInt(KEY_PLAYLIST_POSITION, playlistPosition)
         outState.putLong(KEY_VIDEO_POSITION, player.currentPosition)
@@ -132,7 +140,19 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
         val dataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "videoPlayer"), null)
         val videoSource = HlsMediaSource(uri, dataSourceFactory, 1, null, null)
 
-        player.addListener(this)
+        player.addListener(object : Player.DefaultEventListener(){
+            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                when (playbackState) {
+                    Player.STATE_BUFFERING -> progressBar.visible()
+                    else -> progressBar.gone()
+                }
+            }
+
+            override fun onPlayerError(error: ExoPlaybackException?) {
+                toast(R.string.error_loading_video)
+            }
+        })
+
         player.prepare(videoSource)
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.playWhenReady = true
@@ -166,40 +186,5 @@ class VideoPlayerActivity : BaseActivity(), Player.EventListener, Runnable {
         if (!isFinishing) {
             Handler().postDelayed(this, 1000)
         }
-    }
-
-    override fun onPlayerError(error: ExoPlaybackException?) {
-        toast(R.string.error_loading_video)
-    }
-
-    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-        when (playbackState) {
-            Player.STATE_BUFFERING -> progressBar.visible()
-            else -> progressBar.gone()
-        }
-    }
-
-    override fun onLoadingChanged(isLoading: Boolean) {
-        // Not implemented
-    }
-
-    override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
-        // Not implemented
-    }
-
-    override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
-        // Not implemented
-    }
-
-    override fun onPositionDiscontinuity() {
-        // Not implemented
-    }
-
-    override fun onRepeatModeChanged(repeatMode: Int) {
-        // Not implemented
-    }
-
-    override fun onTimelineChanged(timeline: Timeline?, manifest: Any?) {
-        // Not implemented
     }
 }

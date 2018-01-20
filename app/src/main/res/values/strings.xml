@@ -4,5 +4,6 @@
 
     <string name="error_loading_playlist">Failed to load playlist</string>
     <string name="error_loading_video">Failed to load video</string>
+    <string name="error_no_internet">No internet connection</string>
 
 </resources>
