@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.view.MenuItem
+import android.view.WindowManager
 import android.widget.SeekBar
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.ExoPlayerFactory
@@ -48,10 +49,13 @@ class VideoPlayerActivity : BaseActivity(), Runnable {
     private val playlist: MutableList<Video> = mutableListOf()
     private var playlistPosition = 0
     private var userSeeking = false
+    private var checkTime = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowTitleEnabled(false)
@@ -76,16 +80,11 @@ class VideoPlayerActivity : BaseActivity(), Runnable {
             private var userSeek: Long = 0
 
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val currentSeek =
-                    (progress.toDouble() / 100 * playlist[playlistPosition].duration.toDouble()).toLong()
-
                 if (fromUser) {
-                    userSeek = currentSeek
+                    userSeek = (progress.toDouble() / 100 * playlist[playlistPosition].duration.toDouble()).toLong()
                 } else if (progress == 100 && playlistPosition != playlist.lastIndex) {
                     startVideoStream(++playlistPosition)
                 }
-
-                txtCurrentTime.text = formatTime(currentSeek)
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -103,8 +102,6 @@ class VideoPlayerActivity : BaseActivity(), Runnable {
                 userSeek = 0
             }
         })
-
-        Handler().post(this)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -120,6 +117,16 @@ class VideoPlayerActivity : BaseActivity(), Runnable {
         super.onSaveInstanceState(outState)
     }
 
+    override fun onStart() {
+        super.onStart()
+        player.playWhenReady = true
+    }
+
+    override fun onPause() {
+        player.playWhenReady = false
+        super.onPause()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         player.release()
@@ -127,24 +134,22 @@ class VideoPlayerActivity : BaseActivity(), Runnable {
 
     private fun setupExoPlayer() {
         val videoTrackSelectionFactory = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
-        val trackSelector = DefaultTrackSelector(videoTrackSelectionFactory)
-
-        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector)
-        exoPlayerView.player = player
-    }
-
-    private fun startVideoStream(position: Int) {
-        val video = playlist[position]
-
-        val uri = Uri.parse(video.videoUrl)
-        val dataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "videoPlayer"), null)
-        val videoSource = HlsMediaSource(uri, dataSourceFactory, 1, null, null)
-
+        player = ExoPlayerFactory.newSimpleInstance(this, DefaultTrackSelector(videoTrackSelectionFactory))
         player.addListener(object : Player.DefaultEventListener(){
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 when (playbackState) {
-                    Player.STATE_BUFFERING -> progressBar.visible()
-                    else -> progressBar.gone()
+                    Player.STATE_BUFFERING -> {
+                        checkTime = false
+                        progressBar.visible()
+                    }
+
+                    Player.STATE_READY ->  {
+                            checkTime = true
+                            Handler().removeCallbacks(this@VideoPlayerActivity)
+                            Handler().removeCallbacksAndMessages(null)
+                            progressBar.gone()
+                            Handler().post(this@VideoPlayerActivity)
+                    }
                 }
             }
 
@@ -152,6 +157,15 @@ class VideoPlayerActivity : BaseActivity(), Runnable {
                 toast(R.string.error_loading_video)
             }
         })
+
+        exoPlayerView.player = player
+    }
+
+    private fun startVideoStream(position: Int) {
+        val video = playlist[position]
+        val uri = Uri.parse(video.videoUrl)
+        val dataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "videoPlayer"), null)
+        val videoSource = HlsMediaSource(uri, dataSourceFactory, 1, null, null)
 
         player.prepare(videoSource)
         player.repeatMode = Player.REPEAT_MODE_OFF
@@ -179,12 +193,10 @@ class VideoPlayerActivity : BaseActivity(), Runnable {
     }
 
     override fun run() {
-        if (!userSeeking) {
+        if (!isFinishing && !userSeeking && checkTime) {
+            txtCurrentTime.text = formatTime(player.currentPosition)
             seekBar.progress = ((player.currentPosition.toDouble() / playlist[playlistPosition].duration.toDouble() * 100)).toInt()
-        }
-
-        if (!isFinishing) {
-            Handler().postDelayed(this, 1000)
+            Handler().postDelayed(this, 200)
         }
     }
 }
