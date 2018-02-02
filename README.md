@@ -1,5 +1,6 @@
 Playlist Video Player
 ======
 
-A sample Android app which retrieves a playlist of videos which can then be streamed.
+An Android app which retrieves a playlist of videos which can then be streamed.
+This sample was created to showcase usage of ExoPlayer2.
  
