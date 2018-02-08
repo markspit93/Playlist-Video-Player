@@ -3,5 +3,8 @@ Playlist Video Player
 
 An Android app which retrieves a playlist of videos which can then be streamed.
 
-This sample was created to showcase usage of ExoPlayer2.
- 
+This was a test I did for a company to showcase usage of ExoPlayer2.
+
+<p align="center">
+    <img width="300" height="500" src="./sample.gif">
+</p>
