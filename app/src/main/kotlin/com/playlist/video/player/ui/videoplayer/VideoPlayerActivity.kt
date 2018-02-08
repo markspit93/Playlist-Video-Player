@@ -128,8 +128,8 @@ class VideoPlayerActivity : BaseActivity(), Runnable {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         player.release()
+        super.onDestroy()
     }
 
     private fun setupExoPlayer() {
